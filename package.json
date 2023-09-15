@@ -1,0 +1,21 @@
+{
+    "name": "@itharbors/logger-writer",
+    "version": "0.0.1",
+    "description": "",
+    "main": "./dist/index.js",
+    "module": "./bundle/logger-writer.mjs",
+    "scripts": {
+        "dev": "node ./scripts/dev.js",
+        "build": "node ./scripts/build.js",
+        "test": "npx mocha"
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@swc/cli": "^0.1.57",
+        "@swc/core": "^1.3.15",
+        "@types/node": "^20.6.0",
+        "esbuild": "^0.15.13",
+        "mocha": "^10.2.0"
+    }
+}

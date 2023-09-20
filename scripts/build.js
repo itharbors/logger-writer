@@ -1,21 +1,17 @@
 'use strict';
 
-const { spawn } = require('child_process');
+const { spawnAsync } = require('./utils');
 
-const spawnAsync = function(...cmd) {
-    return new Promise((resolve) => {
-        const child = spawn('npx', [...cmd], {
-            stdio: [0, 1, 2],
-        });
-        child.on('exit', () => {
-            resolve();
-        });
-    });
-};
-
-const exec = async function() {
+const exec = async function () {
     await spawnAsync('tsc');
-    await spawnAsync('esbuild', './source/index.js', '--outfile=./build/logger-writer.mjs', '--bundle', '--format=esm', '--platform=node');
+    await spawnAsync(
+        'esbuild',
+        './source/index.js',
+        '--outfile=./build/logger-writer.mjs',
+        '--bundle',
+        '--format=esm',
+        '--platform=node',
+    );
 };
 
 exec();

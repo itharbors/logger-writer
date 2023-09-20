@@ -6,11 +6,13 @@ import { mkdir, Mode, open, close, openSync, closeSync } from 'fs';
 /**
  * 检查文件路径是否合法
  * 不合法直接 throw 错误
- * @param path 
+ * @param path
  */
 export function checkPath(path: string) {
     if (process.platform === 'win32') {
-        const pathHasInvalidWinCharacters = /[<>:"|?*]/.test(path.replace(parse(path).root, ''));
+        const pathHasInvalidWinCharacters = /[<>:"|?*]/.test(
+            path.replace(parse(path).root, '')
+        );
         if (pathHasInvalidWinCharacters) {
             // error.code = 'EINVAL';
             throw new Error(`Path contains invalid characters: ${path}`);
@@ -20,8 +22,8 @@ export function checkPath(path: string) {
 
 /**
  * 获取文件权限，默认 777
- * @param options 
- * @returns 
+ * @param options
+ * @returns
  */
 export function getMode(options: { mode: number } | number): Mode {
     if (typeof options === 'number') {
@@ -35,53 +37,44 @@ export function getMode(options: { mode: number } | number): Mode {
 
 /**
  * 创建文件夹，确保文件夹一定存在
- * @param dir 
- * @param options 
- * @returns 
+ * @param dir
+ * @param options
+ * @returns
  */
-export async function makeDir(dir: string, options: { mode: number, } | number): Promise<string | undefined> {
-    checkPath(dir)
+export async function makeDir(
+    dir: string,
+    options: { mode: number } | number
+): Promise<string | undefined> {
+    checkPath(dir);
     return new Promise((resolve, reject) => {
-        mkdir(dir, {
-            mode: getMode(options),
-            recursive: true,
-        }, function(error, path) {
-            if (error) {
-                return reject;
+        mkdir(
+            dir,
+            {
+                mode: getMode(options),
+                recursive: true,
+            },
+            function (error, path) {
+                if (error) {
+                    return reject;
+                }
+                resolve(path);
             }
-            resolve(path);
-        });
+        );
     });
 }
 
 /**
  * 打开一个文件
- * @param file 
- * @returns 
+ * @param file
+ * @returns
  */
 export function openFile(file: string): Promise<number> {
     return new Promise((resolve, reject) => {
-        open(file, function(error, fd) {
+        open(file, function (error, fd) {
             if (error) {
                 return reject(error);
             }
             resolve(fd);
-        });
-    });
-}
-
-/**
- * 关闭一个已经打开的文件
- * @param fd 
- * @returns 
- */
-export function closeFile(fd: number): Promise<void> {
-    return new Promise((resolve, reject) => {
-        close(fd, function(error) {
-            if (error) {
-                return reject(error);
-            }
-            resolve();
         });
     });
 }

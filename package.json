@@ -7,7 +7,8 @@
     "scripts": {
         "dev": "node ./scripts/dev.js",
         "build": "node ./scripts/build.js",
-        "test": "npm run build && npx mocha ./dist/test"
+        "test": "npm run build && npx mocha ./dist/test",
+        "ci": "npm install && npm run build && npm run test"
     },
     "author": "VisualSJ",
     "publishConfig": {

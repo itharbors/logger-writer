@@ -48,7 +48,7 @@ describe(`LogWritter`, function () {
             logWritter.write(logType.debug, printStr);
 
             await new Promise((resolve) => {
-                setTimeout(resolve, 1000);
+                setTimeout(resolve, 100);
             });
 
             const str = readFileSync(file, 'utf8');
@@ -72,7 +72,7 @@ describe(`LogWritter`, function () {
             logWritter.write(logType.debug, printStr3);
 
             await new Promise((resolve) => {
-                setTimeout(resolve, 1000);
+                setTimeout(resolve, 100);
             });
 
             const str = readFileSync(file, 'utf8');

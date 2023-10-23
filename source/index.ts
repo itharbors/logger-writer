@@ -1,6 +1,6 @@
 'use strict';
 
-import { dirname, isAbsolute } from 'path';
+import { dirname, basename, isAbsolute, extname, join } from 'path';
 import { createWriteStream, WriteStream } from 'fs';
 
 import { makeDir } from './utils';
@@ -27,35 +27,49 @@ printTypeMap.set(logType.error, 'Error');
 type LoggerOption = {
     // 日志文件位置
     file: string;
-    // 分页功能
-    // page?: {
-    //     // 当文件大小超出后，将现有文件归档
-    //     size?: number;
-    // };
+    // 当一个文件超出函数后，自动分文件
+    maxLine?: number;
+    // 最多存储多少文件，超出文件数量后，会自动删除最早的文件
+    maxFile?: number;
 };
 
 export class LogWritter {
-    private option: LoggerOption;
+    private option: {
+        // 存储文件的文件夹
+        dir: string;
+        // 写入文件的扩展名
+        ext: string;
+        // 文件前缀（后缀会自动增加）
+        file: string;
+    };
     private writing = false;
     private writeStream?: WriteStream;
 
-    private async init(option: LoggerOption) {
-        const dir = dirname(option.file);
-        await makeDir(dir, { mode: 0o777 });
+    private async init() {
+        await makeDir(this.option.dir, { mode: 0o777 });
+
+        const file = join(this.option.dir, this.option.file + this.option.ext);
 
         // 创建 log 文件写入流
-        this.writeStream = createWriteStream(option.file, { flags: 'a' });
+        this.writeStream = createWriteStream(file, { flags: 'a' });
         this.step();
     }
 
     constructor(option: LoggerOption) {
         if (!isAbsolute(option.file)) {
-            throw new Error('LogWritter 需要传入绝对路径');
+            throw new Error('LogWriter needs to be passed an absolute path.');
         }
-        this.option = option;
+
+        const ext = extname(option.file);
+        this.option = {
+            dir: dirname(option.file),
+            ext,
+            file: basename(option.file, ext),
+        };
+
         this.queue.enqueue(`Log Writter Startup: ${(new Date()).toISOString()}`);
 
-        this.init(option);
+        this.init();
     }
 
     // 等待写入的队列

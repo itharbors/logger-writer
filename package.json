@@ -21,7 +21,8 @@
         "@types/mocha": "^10.0.1",
         "@types/node": "^20.6.0",
         "esbuild": "^0.15.13",
-        "mocha": "^10.2.0"
+        "mocha": "^10.2.0",
+        "typescript": "^5.2.2"
     },
     "dependencies": {
         "@itharbors/structures": "^0.0.2"

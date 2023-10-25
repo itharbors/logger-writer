@@ -1,7 +1,7 @@
 'use strict';
 
 import { parse } from 'path';
-import { mkdir, Mode, open, close, openSync, closeSync } from 'fs';
+import { mkdir, Mode, open, close, openSync, closeSync, readdir } from 'fs';
 
 /**
  * 检查文件路径是否合法
@@ -60,6 +60,22 @@ export async function makeDir(
                 resolve(path);
             }
         );
+    });
+}
+
+/**
+ * 读取一个文件夹内所有的文件
+ * @param dir 
+ * @returns 
+ */
+export async function readFiles(dir: string): Promise<string[]> {
+    return new Promise((resolve, reject) => {
+        readdir(dir, function (error, files) {
+            if (error) {
+                return reject(error);
+            }
+            resolve(files);
+        });
     });
 }
 

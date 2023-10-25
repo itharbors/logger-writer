@@ -10,3 +10,22 @@
 - 增加日志前缀
 - 日志文件拆分
 - 写入文件时的系统优化
+
+## 
+
+```ts
+import { join } from 'path';
+import { LogWritter, logType } from '@itharbors/log-writer';
+
+// 生成一个写入对象
+const logger = new LogWritter({
+    file: join(__dirname, './test.log'),
+    maxLine: 
+});
+
+// 当前的日志文件
+logger.file;
+
+// 写入日志文件
+logger.write(logType.debug, 'test-1');
+```

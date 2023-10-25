@@ -1,9 +1,9 @@
 'use strict';
 
 import { dirname, basename, isAbsolute, extname, join } from 'path';
-import { createWriteStream, WriteStream } from 'fs';
+import { createWriteStream, unlinkSync, WriteStream } from 'fs';
 
-import { makeDir } from './utils';
+import { makeDir, readFiles } from './utils';
 import { ObjectQueue } from '@itharbors/structures';
 
 // 日志等级
@@ -33,6 +33,9 @@ type LoggerOption = {
     maxFile?: number;
 };
 
+/**
+ * File: ${name}_${year}${month}${date}_${num}.${ext}
+ */
 export class LogWritter {
     private option: {
         // 存储文件的文件夹
@@ -41,17 +44,61 @@ export class LogWritter {
         ext: string;
         // 文件前缀（后缀会自动增加）
         file: string;
+
+        maxLine: number;
+        maxFile: number;
     };
     private writing = false;
     private writeStream?: WriteStream;
+    private writeLine = 0;
+
+    public file: string = '';
 
     private async init() {
         await makeDir(this.option.dir, { mode: 0o777 });
+        const files = await readFiles(this.option.dir);
 
-        const file = join(this.option.dir, this.option.file + this.option.ext);
+        let time = new Date();
+        let year = time.getFullYear();
+        let month = time.getMonth() + 1;
+        let date = time.getDate();
+
+        let dateStr = `${year}${month}${date}`;
+        let num = 0;
+        let fileList: string[] = [];
+
+        // 递增日志文件名，每次启动后缀自增 1
+        for (const file of files) {
+            const splitStr = file.split('-');
+            if (
+                splitStr[0] !== this.option.file ||
+                splitStr[1] !== dateStr
+            ) {
+                continue;
+            }
+            fileList.push(file);
+            let fileNum = parseInt(splitStr[2]);
+            if (num <= fileNum) {
+                num = fileNum + 1;
+            }
+        }
+
+        // 删除超出文件最大数量的日志文件
+        while (fileList.length >= this.option.maxFile) {
+            const file = join(this.option.dir, fileList.shift()!);
+
+            try {
+                unlinkSync(file);
+            } catch(error) {
+                console.log(error);
+            }
+        }
+
+        this.file = join(this.option.dir, `${this.option.file}-${dateStr}-${num}${this.option.ext}`);
 
         // 创建 log 文件写入流
-        this.writeStream = createWriteStream(file, { flags: 'a' });
+        this.writeStream = createWriteStream(this.file, { flags: 'a' });
+        this.writeStream.write(`Log Writter Startup: ${(new Date()).toISOString()}`);
         this.step();
     }
 
@@ -64,10 +111,24 @@ export class LogWritter {
         this.option = {
             dir: dirname(option.file),
             ext,
-            file: basename(option.file, ext),
+            file: basename(option.file, ext).replace(/-/g, '_'),
+            maxLine: option.maxLine || 1000000,
+            maxFile: option.maxFile || 100,
         };
 
-        this.queue.enqueue(`Log Writter Startup: ${(new Date()).toISOString()}`);
+        if (
+            typeof this.option.maxFile !== 'number' ||
+            this.option.maxFile <= 0
+        ) {
+            this.option.maxFile = 100;
+        }
+
+        if (
+            typeof this.option.maxLine !== 'number' ||
+            this.option.maxLine < 2
+        ) {
+            this.option.maxLine = 1000000;
+        }
 
         this.init();
     }
@@ -92,10 +153,20 @@ export class LogWritter {
             return;
         }
         this.writing = true;
-        this.writeStream.write(message, () => {
+        this.writeLine++;
+        this.writeStream.write('\n' + message, () => {
             this.writing = false;
-            this.step();
+
+            if (this.writeLine >= this.option.maxLine) {
+                this.writeLine = 0;
+                this.writeStream = undefined;
+                this.init();
+            } else {
+                this.step();
+            }
+            
         });
+
     }
 
     /**
@@ -105,7 +176,7 @@ export class LogWritter {
      */
     write(type: logType, message: string) {
         // 增加时间前缀
-        this.queue.enqueue(`\n${(new Date()).toISOString()} [${printTypeMap.get(type) || 'Normal'}] ${message}`);
+        this.queue.enqueue(`${(new Date()).toISOString()} [${printTypeMap.get(type) || 'Normal'}] ${message}`);
         this.step();
     }
 }

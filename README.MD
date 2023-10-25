@@ -19,8 +19,12 @@ import { LogWritter, logType } from '@itharbors/log-writer';
 
 // 生成一个写入对象
 const logger = new LogWritter({
+    // 存储文件，实际文件会加上后缀
     file: join(__dirname, './test.log'),
-    maxLine: 
+    // 每个文件存储的日志条数，这里的 line 不是文本里的实际行数
+    maxLine: 200000,
+    // 最多同时存在多少个日志文件，超出个数的文件会被自动删除
+    maxFile: 100,
 });
 
 // 当前的日志文件
